@@ -13,22 +13,25 @@
           v-model="field1"
           background-color="grey darken-4"
           autofocus
-          prepend-inner-icon="mdi-account-circle"
-          label="Имя"
+          prepend-inner-icon="mdi-email"
+          label="Email"
           solo
           required
+          autocomplete
+          clearable
         ></v-text-field>
 
         <v-text-field
           background-color="grey darken-4"
-          prepend-inner-icon="mdi-lock"
+          :prepend-inner-icon="showPassword ? 'mdi-lock-open-variant':'mdi-lock'"
           :append-icon="showPassword ? 'mdi-eye':'mdi-eye-off'"
           :type="showPassword ?'text' :  'password'"
           @click:append="showPassword =! showPassword"
           v-model="field2"
           solo
-          label="Пароль"
+          label="Password"
           required
+          autocomplete
         ></v-text-field>
         <v-checkbox v-model="check" color="primary" label="Зарегестрироваться"></v-checkbox>
         <v-btn block color type="submit">{{!check ? 'Войти на сайт': 'Зарегестрироваться'}}</v-btn>
@@ -38,11 +41,11 @@
 </template>
 <script>
 export default {
-  name: "TheLogin",
+  name: 'TheLogin',
   data() {
     return {
-      field1: "",
-      field2: "",
+      field1: '',
+      field2: '',
       check: false,
       showPassword: false
     };
