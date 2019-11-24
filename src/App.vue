@@ -2,17 +2,10 @@
   <v-app>
     <TheHeader />
     <v-content>
-      <v-container class="d-flex">
-        <my-slider title="Популярные">
-          <v-slide-item
-            class="mx-3 my-4"
-            v-for="movie in popular"
-            :key="movie.id"
-            v-slot:default="{ active, toggle }"
-          >
-            <MovieCard :movie="movie" />
-          </v-slide-item>
-        </my-slider>
+      <Profile />
+      <v-container :fluid="fluid">
+        <TheHeaderCatalogContent v-if="catalog" />
+        <!-- <Slider title="Популярные" :movies="popular" :cardSize="'small'" /> -->
       </v-container>
     </v-content>
     <TheFooter />
@@ -20,37 +13,46 @@
 </template>
 
 <script>
-import TheHeader from "@/components/TheHeader/TheHeader";
-import TheFooter from "@/components/TheFooter";
-import MovieCard from "@/components/MovieCard";
-import Slider from "@/components/Slider";
-import { ApiMixin } from "@/Mixins/ApiMixin.js";
+import TheHeader from '@/components/TheHeader/TheHeader';
+import TheFooter from '@/components/TheFooter';
+import Profile from '@/components/Profile/Profile';
+// import Slider from '@/components/Slider/Slider2';
+import { ApiMixin } from '@/Mixins/ApiMixin.js';
+import TheHeaderCatalogContent from '@/components/TheHeader/TheHeaderCatalogContent';
 
 export default {
-  name: "App",
+  name: 'App',
   mixins: [ApiMixin],
   components: {
     TheHeader,
     TheFooter,
-    MovieCard,
-    "my-slider": Slider
+    TheHeaderCatalogContent,
+    Profile,
+    // Slider,
   },
   created() {
-    //
-    /* eslint-disable-next-line */
-    this.$_ApiMixin_getPopularMovies(1).then(data => {
+    this.$_ApiMixin_getPopularMovies(1).then((data) => {
       this.popular = data;
     });
+    window.$vm = this;
   },
   data() {
     return {
-      popular: []
+      popular: [],
     };
-  }
+  },
+  computed: {
+    fluid() {
+      return this.$vuetify.breakpoint.xlAndDown;
+    },
+    catalog() {
+      return this.$store.getters.catalog;
+    },
+  },
 };
 </script>
 <style>
 body {
-  font-family: "Courier New", Courier, monospace !important;
+  font-family: 'Courier New', Courier, monospace !important;
 }
 </style>
