@@ -1,7 +1,7 @@
 <template>
-  <v-menu offset-y>
+  <v-menu left offset-y>
     <template v-slot:activator="{on}">
-      <v-btn v-on="on" width="64" height="64" text>
+      <v-btn v-on="on" width="64" height="64" tile text>
         <v-badge color="primary" overlap>
           <template v-if="model" v-slot:badge>{{counter}}</template>
           <v-icon v-if="model" size="32">mdi-bell-ring</v-icon>
@@ -15,13 +15,13 @@
 </template>
 <script>
 export default {
-  name: "TheHeaderNotification",
+  name: 'TheHeaderNotification',
   components: {
     TheHeaderNotificationContent: () =>
-      import("./TheHeaderNotificationContent.vue")
+      import('./TheHeaderNotificationContent.vue'),
   },
   data() {
     return { model: null, counter: 0 };
-  }
+  },
 };
 </script>

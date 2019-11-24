@@ -3,7 +3,7 @@
     <v-container>
       <v-row align="center">
         <!-- Logo -->
-        <v-btn text height="66">
+        <v-btn text tile height="66">
           <img src="@/assets/Logo.svg" />
         </v-btn>
         <!-- Logo end -->
@@ -17,20 +17,14 @@
   </v-toolbar>
 </template>
 <script>
-import TheHeaderCatalog from "./TheHeaderCatalog";
-import TheHeaderSearch from "./TheHeaderSearch";
-import TheHeaderProfile from "./TheHeaderProfile";
-import TheHeaderReplay from "./TheHeaderReplay";
-import TheHeaderNotification from "./TheHeaderNotification";
-
 export default {
-  name: "TheHeader",
+  name: 'TheHeader',
   components: {
-    TheHeaderCatalog,
-    TheHeaderReplay,
-    TheHeaderProfile,
-    TheHeaderNotification,
-    TheHeaderSearch
-  }
+    TheHeaderCatalog: () => import('./TheHeaderCatalog'),
+    TheHeaderReplay: () => import('./TheHeaderSearch'),
+    TheHeaderProfile: () => import('./TheHeaderProfile'),
+    TheHeaderNotification: () => import('./TheHeaderReplay'),
+    TheHeaderSearch: () => import('./TheHeaderNotification'),
+  },
 };
 </script>

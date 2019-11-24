@@ -1,7 +1,7 @@
 <template>
-  <v-menu offset-y>
+  <v-menu left offset-y>
     <template v-slot:activator="{on}">
-      <v-btn v-on="on" width="64" height="64" text>
+      <v-btn v-on="on" width="64" height="64" tile text>
         <v-icon size="35">mdi-play-circle</v-icon>
       </v-btn>
     </template>
@@ -29,6 +29,6 @@
 </template>
 <script>
 export default {
-  name: "TheHeaderReplay"
+  name: 'TheHeaderReplay',
 };
 </script>

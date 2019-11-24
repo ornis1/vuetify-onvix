@@ -9,13 +9,13 @@
         class="mb-4 align-baseline"
         label="Выбрать аватарку"
       >
-        <v-btn slot="append-outer">
+        <v-btn @click="changeAvatar" slot="append-outer">
           <v-icon left>mdi-lead-pencil</v-icon>Изменить
         </v-btn>
       </v-file-input>
 
       <v-text-field
-        v-for="input in inputs"
+        v-for="input in form.inputs"
         :key="input.label"
         color="white"
         class="my-4 align-baseline"
@@ -23,20 +23,21 @@
         :prepend-inner-icon="input.icon"
         hide-details
         clearable
+        v-model="form[input.model]"
         :label="input.label"
         :type="input.type"
       >
-        <v-btn slot="append-outer">
+        <v-btn @click="update(input.model)" slot="append-outer">
           <v-icon left>mdi-lead-pencil</v-icon>Изменить
         </v-btn>
       </v-text-field>
       <v-divider class="my-10"></v-divider>
-      <v-card class="px-3 pb-5 pt-1 mb-4" :key="radio.label" v-for="(radio, index) in radios">
+      <v-card class="px-3 pb-5 pt-1 mb-4" :key="radio.label" v-for="(radio, index) in form.radios">
         <v-radio-group
           :mandatory="false"
           :label="radio.label"
           hide-details
-          v-model="radiosAnswer[index]"
+          v-model="form.radiosAnswer[index]"
         >
           <v-radio
             color="white"
@@ -64,52 +65,76 @@
 export default {
   name: 'Profile',
   data: () => ({
-    radiosAnswer: [],
-    inputs: [
-      { label: 'Имя', type: 'text', icon: 'mdi-account-circle' },
-      { label: 'Почта', type: 'email', icon: 'mdi-mail' },
-      { label: 'Пароль', type: 'password', icon: 'mdi-lock' },
-    ],
-    radios: [
-      {
-        label: 'Показывать фильмы с рекламой ?',
-        answers: [
-          'Скрывать из моей ленты до появления версии без рекламы',
-          ' Показывать, но предупреждать о такой рекламе',
-          'Показывать и не предупреждать о рекламе',
-        ],
-      },
-      {
-        label: 'Приоритет видеопотока',
-        answers: ['HLS', 'mp4'],
-      },
-      {
-        label: 'Приоритет рейтинга',
-        answers: ['IMDB', 'Кинопоиск'],
-      },
-    ],
-    tabs: [
-      { title: 'Настройки', value: 'tab1' },
-      { title: 'Оплата доступа', value: 'tab2' },
-      { title: 'Истории платежей', value: 'tab3' },
-      { title: 'Устройства', value: 'tab4' },
-      { title: 'Сессии', value: 'tab5' },
-    ],
+    form: {
+      name: '',
+      email: '',
+      password: '',
+      inputsAnswer: [],
+      inputs: [
+        {
+          label: 'Имя',
+          type: 'text',
+          model: 'name',
+          icon: 'mdi-account-circle',
+        },
+        { label: 'Почта', type: 'email', model: 'email', icon: 'mdi-mail' },
+        {
+          label: 'Пароль',
+          type: 'password',
+          model: 'password',
+          icon: 'mdi-lock',
+        },
+      ],
+      radiosAnswer: [],
+      radios: [
+        {
+          label: 'Показывать фильмы с рекламой ?',
+          answers: [
+            'Скрывать из моей ленты до появления версии без рекламы',
+            ' Показывать, но предупреждать о такой рекламе',
+            'Показывать и не предупреждать о рекламе',
+          ],
+        },
+        {
+          label: 'Приоритет видеопотока',
+          answers: ['HLS', 'mp4'],
+        },
+        {
+          label: 'Приоритет рейтинга',
+          answers: ['IMDB', 'Кинопоиск'],
+        },
+      ],
+    },
   }),
   methods: {
+    update(value) {
+      const functions = {
+        name: this.updateName,
+        email: this.updateEmail,
+        password: this.updatePassword,
+      };
+      functions[value]();
+    },
+    /* Обновляем имя пользователя */
+    updateName() {
+      this.$store.dispatch('updateName', this.form.name);
+    },
+    /* Обновляем пароль пользователя */
+    updatePassword() {
+      this.$store.dispatch('updatePassword', this.form.password);
+    },
+    /* Обновляем почту пользователя */
+    updateEmail() {
+      this.$store.dispatch('updateEmail', this.form.email);
+    },
+    /* Уцдаляем фотку пользователя */
     deletePhoto() {
       this.$store.dispatch('updatePhoto', null);
     },
-    handleClick(newTab) {
-      this.currentTab = newTab;
-    },
+    /* Обновляем фотку пользователя */
     changeAvatar(event) {
       const file = event.target.files[0];
       this.$store.dispatch('updatePhoto', file);
-    },
-    updateUserInfo() {
-      const { login, email } = this.$data;
-      this.$store.dispatch('updateProfile', { login, email });
     },
   },
 };

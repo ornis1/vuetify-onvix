@@ -2,9 +2,8 @@
   <v-app>
     <TheHeader />
     <v-content>
-      <Profile />
       <v-container :fluid="fluid">
-        <TheHeaderCatalogContent v-if="catalog" />
+        <Profile />
         <!-- <Slider title="Популярные" :movies="popular" :cardSize="'small'" /> -->
       </v-container>
     </v-content>
@@ -18,7 +17,6 @@ import TheFooter from '@/components/TheFooter';
 import Profile from '@/components/Profile/Profile';
 // import Slider from '@/components/Slider/Slider2';
 import { ApiMixin } from '@/Mixins/ApiMixin.js';
-import TheHeaderCatalogContent from '@/components/TheHeader/TheHeaderCatalogContent';
 
 export default {
   name: 'App',
@@ -26,7 +24,6 @@ export default {
   components: {
     TheHeader,
     TheFooter,
-    TheHeaderCatalogContent,
     Profile,
     // Slider,
   },

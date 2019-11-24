@@ -1,7 +1,7 @@
 <template>
-  <v-menu offset-y :close-on-content-click="false">
+  <v-menu left offset-y :close-on-content-click="false">
     <template v-slot:activator="{on}">
-      <v-btn v-on="on" text height="66" width="66">
+      <v-btn v-on="on" text tile height="66" width="66">
         <v-avatar>
           <img src="https://cdn.vuetifyjs.com/images/lists/2.jpg" alt />
         </v-avatar>
@@ -41,10 +41,10 @@
 </template>
 <script>
 export default {
-  name: "TheHeaderProfile",
+  name: 'TheHeaderProfile',
   data() {
     return {};
-  }
+  },
 };
 </script>
 <style scoped>
