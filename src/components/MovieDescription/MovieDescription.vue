@@ -2,7 +2,7 @@
   <v-container>
     {{tab}}
     <v-row>
-      <v-col cols="4" class="justify-end">
+      <v-col offset-lg="1" md="4" sm="3" lg="3">
         <MovieDecriptionPoster class="sticky" :posterImg="posterImg" :loading="loading" />
       </v-col>
 
