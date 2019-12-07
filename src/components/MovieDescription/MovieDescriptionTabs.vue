@@ -24,8 +24,14 @@
                   v-for="actor in cast"
                   :key="actor.id"
                 >
-                  <v-img :aspect-ratio="1" contain max-width="90" :src="imgSrc(actor.profile_path)"></v-img>
-                  <span class="ml-5 align-self-end">{{actor.name}}</span>
+                  <v-list-item :to="{path:`/actor/${actor.id}`}">
+                    <v-list-item-avatar :height="90/3*4" tile width="90">
+                      <v-img class="full-height" max-width="90" :src="imgSrc(actor.profile_path)"></v-img>
+                    </v-list-item-avatar>
+                    <v-list-item-content class="align-self-end justify-start">
+                      <router-link :to="{path:`/actor/${actor.id}`}" class>{{actor.name}}</router-link>
+                    </v-list-item-content>
+                  </v-list-item>
                 </v-col>
               </v-row>
             </v-container>
@@ -36,11 +42,13 @@
             <v-row v-for="(movie, index) in similar" :key="movie.id" class="mb-6" align="center">
               <v-img contain max-width="60" :src="imgSrc(movie.poster_path)"></v-img>
               <v-col>
-                <span light>{{`${index} ${movie.title}`}}</span>
+                <span light>{{`${++index} ${movie.title}`}}</span>
               </v-col>
-              <v-col cols="3" justify class="d-flex justify-space-between text-right">
-                <span class="grey--text mr-7">{{getMovieYear(movie.release_date)}}</span>
-                <span>IMDB {{movie.vote_average}}</span>
+              <v-col cols="2" class="text-right">
+                <span class="grey--text">{{getMovieYear(movie.release_date)}}</span>
+              </v-col>
+              <v-col cols="2" class="text-left">
+                <span>IMDB {{rating(movie.vote_average)}}</span>
               </v-col>
             </v-row>
           </v-container>
@@ -80,8 +88,10 @@ export default {
   created() {
     this.movie = this.info.movie;
     this.cast = this.info.cast;
-    this.cast.length = 10;
     this.id = this.info.id;
+
+    this.cast = this.cast.filter((v) => v.profile_path);
+    this.cast.length = this.cast.length >= 10 ? 10 : this.cast.length;
     this.$_ApiMixin_getSimilar(this.id).then((data) => {
       this.similar = data.results;
     });
@@ -89,6 +99,9 @@ export default {
     //
   },
   methods: {
+    rating(v) {
+      return v.toString().length === 1 ? `${v}.0` : v;
+    },
     imgSrc(path) {
       return (this.posterImg = this.$_ApiMixin_getImg(path, 300));
     },
@@ -98,3 +111,15 @@ export default {
   },
 };
 </script>
+<style lang="scss" scoped>
+a {
+  color: white;
+  text-decoration: none;
+  &:hover {
+    color: #ffb300;
+  }
+}
+.full-height {
+  height: 100%;
+}
+</style>

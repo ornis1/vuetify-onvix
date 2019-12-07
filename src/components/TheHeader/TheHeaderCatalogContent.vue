@@ -1,45 +1,63 @@
 <template>
   <div>
-    <v-card light height="305">
-      <v-row>
-        <v-col sm="3" class="pa-0">
-          <v-list flat class="grey lighten-3 blue--text border-left">
-            <v-list-item-group mandatory v-model="model" active-class="active">
-              <v-list-item v-for="link in links" :key="link">
-                <span class="pl-10">{{link}}</span>
-              </v-list-item>
-              <v-divider></v-divider>
-              <v-list-item>
-                <span class="pl-10">Подборки</span>
-              </v-list-item>
-              <v-list-item>
-                <span class="pl-10">Фильтры</span>
-              </v-list-item>
-            </v-list-item-group>
-          </v-list>
-        </v-col>
-        <v-divider vertical></v-divider>
-        <ul class="my_list">
-          <li v-for="i in 8" :key="i">
-            <v-btn active-class="active" text tile width="216" height="48">{{links[model]}}</v-btn>
+    <v-tabs color="#24b2d8" fixed-tabs vertical v-model="model">
+      <v-tabs-slider></v-tabs-slider>
+
+      <v-tab
+        class="px-10"
+        v-for="(link,index) of links"
+        :key="index"
+        :href="`#tab-${index}` "
+      >{{ link.name }}</v-tab>
+      <v-divider></v-divider>
+      <v-btn block tile disabled>Подборки</v-btn>
+      <v-btn block disabled>Фильтры</v-btn>
+      <!-- КОНТЕНТ -->
+      <v-tab-item
+        class="white"
+        v-for="(link,index) in links"
+        :key="link.name"
+        :value="'tab-' + index"
+      >
+        <v-list tile class="white my_list">
+          <v-divider vertical></v-divider>
+          <li v-for="genre in link.genres" :key="genre.id">
+            <router-link
+              :to="{name:'resultWithId' ,params: { id: genre.id,type: 'genre',  title: genre.name,}}"
+            >
+              <v-btn class="black--text" text block height="48">{{genre.name}}</v-btn>
+            </router-link>
           </li>
-        </ul>
-      </v-row>
-    </v-card>
+        </v-list>
+      </v-tab-item>
+    </v-tabs>
   </div>
 </template>
 <script>
+import { ApiMixin } from '@/Mixins/ApiMixin';
 export default {
+  mixins: [ApiMixin],
   data() {
     return {
-      model: 1,
+      model: 'tab-0',
       loading: true,
-      links: ['Фильмы', 'Сериалы', 'Мультфильмы', 'Аниме'],
+      links: [{ name: 'Фильмы', genres: [] }, { name: 'Сериалы', genres: [] }],
     };
+  },
+  created() {
+    this.$_ApiMixin_getMovieGenres().then((response) => {
+      this.links[0].genres = response.genres;
+    });
+    this.$_ApiMixin_getTVGenres().then((response) => {
+      this.links[1].genres = response.genres;
+    });
   },
 };
 </script>
-<style  scoped>
+<style lang="scss"  scoped>
+.v-tab {
+  background-color: #e8e8e8;
+}
 .active {
   border-left: 4px solid #24b2d8;
   background-color: #fff !important;
@@ -56,14 +74,17 @@ export default {
   flex-direction: column;
   flex-wrap: wrap;
   height: 305px;
-  width: auto;
+  width: 150px;
 }
 .my_list li {
   width: 216px;
 }
 
-.my_list li .v-btn:hover {
-  color: #24b2d8 !important;
-  transition: none;
+.my_list li .v-btn {
+  background-color: transparent;
+  &:hover {
+    color: #24b2d8 !important;
+    transition: none;
+  }
 }
 </style>

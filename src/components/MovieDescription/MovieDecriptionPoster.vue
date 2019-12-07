@@ -1,16 +1,9 @@
 <template>
   <div>
-    <!-- PLACEHOLDER -->
-    <v-responsive v-if="loading" max-width="270" color="transparent">
-      <v-skeleton-loader type="image@2"></v-skeleton-loader>
-      <v-skeleton-loader class="mt-5" type="image" height="30"></v-skeleton-loader>
-      <v-skeleton-loader class="mt-5" type="image" height="30"></v-skeleton-loader>
-    </v-responsive>
-    <!-- END PLACEHOLDER -->
     <v-responsive max-width="300">
       <v-img class="align-end justify-between mb-10" :src="posterImg">
         <v-list-item class="px-10 d-flex justify-space-around mb-4">
-          <v-tooltip
+          <!-- <v-tooltip
             transition="fade-transition"
             v-for="icon in activeIcons"
             :key="icon.icon"
@@ -32,21 +25,25 @@
               </v-hover>
             </template>
             <span class="black--text">{{icon.tooltip}}</span>
-          </v-tooltip>
+          </v-tooltip>-->
+          <ActiveIcons :movie="movie" />
         </v-list-item>
       </v-img>
       <v-btn height="47" class="mb-5" color="primary" block>Смотреть</v-btn>
-      <v-btn height="47" class="mb-5" light block>Смотреть</v-btn>
+      <v-btn height="47" class="mb-5" light block>Трейлер</v-btn>
     </v-responsive>
   </div>
 </template>
 <script>
+import ActiveIcons from '@/components/ActiveIcons/ActiveIcons';
 export default {
   name: 'MovieDecriptionPoster',
   props: {
+    movie: { type: Object, required: true },
     posterImg: { type: String },
     loading: { type: Boolean },
   },
+  components: { ActiveIcons },
   data() {
     return {
       activeIcons: {

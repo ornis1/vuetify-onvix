@@ -23,12 +23,12 @@
 </template>
 <script>
 export default {
-  name: "asd",
+  name: 'asd',
   data() {
     return { loading: true };
   },
   mounted() {
     this.loading = false;
-  }
+  },
 };
 </script>

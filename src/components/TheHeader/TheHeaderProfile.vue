@@ -22,18 +22,21 @@
             </v-list-item-content>
           </v-list-item>
           <v-divider></v-divider>
-          <v-list-item class="pl-6">Оплата доступа</v-list-item>
-          <v-list-item class="pl-6">Пригласить друзей</v-list-item>
+          <v-list-item disabled class="pl-6">Оплата доступа</v-list-item>
+          <v-list-item disabled class="pl-6">Пригласить друзей</v-list-item>
           <v-divider></v-divider>
-          <v-list-item class="pl-6">Смотрю сейчас</v-list-item>
-          <v-list-item class="pl-6">Смотреть позже</v-list-item>
-          <v-list-item class="pl-6">Избранное</v-list-item>
-          <v-list-item class="pl-6">Просмотренное</v-list-item>
-          <v-list-item class="pl-6">Подписки</v-list-item>
+          <v-list-item disabled class="pl-6">Смотрю сейчас</v-list-item>
+          <v-list-item
+            :to="{name: 'result', params:{type:'watchLater'}}"
+            class="pl-6"
+          >Смотреть позже</v-list-item>
+          <v-list-item :to="{name: 'result', params:{type:'favorite'}}" class="pl-6">Избранное</v-list-item>
+          <v-list-item :to="{name: 'result', params:{type:'watched'}}" class="pl-6">Просмотренное</v-list-item>
+          <v-list-item disabled class="pl-6">Подписки</v-list-item>
           <v-divider></v-divider>
-          <v-list-item class="pl-6">Подключить устройство</v-list-item>
-          <v-list-item class="pl-6">Настройки</v-list-item>
-          <v-list-item class="pl-6">Выход</v-list-item>
+          <v-list-item disabled class="pl-6">Подключить устройство</v-list-item>
+          <v-list-item :to="{name: 'profile'}" class="pl-6">Настройки</v-list-item>
+          <v-list-item @click="logout()" class="pl-6">Выход</v-list-item>
         </v-list-item-group>
       </v-list>
     </v-card>
@@ -44,6 +47,12 @@ export default {
   name: 'TheHeaderProfile',
   data() {
     return {};
+  },
+  methods: {
+    logout() {
+      this.$store.dispatch('signOut');
+      this.$router.push('/login');
+    },
   },
 };
 </script>

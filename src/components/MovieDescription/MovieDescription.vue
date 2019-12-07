@@ -3,13 +3,33 @@
     {{tab}}
     <v-row>
       <v-col offset-lg="1" md="4" sm="3" lg="3">
-        <MovieDecriptionPoster class="sticky" :posterImg="posterImg" :loading="loading" />
+        <!-- PLACEHOLDER -->
+        <v-responsive v-if="loading" max-width="270" color="transparent">
+          <v-skeleton-loader type="image@2" tile></v-skeleton-loader>
+          <v-skeleton-loader class="mt-5" type="image" height="30"></v-skeleton-loader>
+          <v-skeleton-loader class="mt-5" type="image" height="30"></v-skeleton-loader>
+        </v-responsive>
+        <!-- END PLACEHOLDER -->
+        <MovieDecriptionPoster
+          v-else
+          class="sticky"
+          :movie="movie"
+          :posterImg="posterImg"
+          :loading="loading"
+        />
       </v-col>
 
       <v-col cols="8">
         <v-card color="transparent" flat>
           <!-- Заголовок -->
-          <v-skeleton-loader v-if="loading" class="mb-5" type="image" height="40" max-width="350"></v-skeleton-loader>
+          <v-skeleton-loader
+            v-if="loading"
+            class="mb-5"
+            type="image"
+            tile
+            height="40"
+            max-width="350"
+          ></v-skeleton-loader>
           <v-card-title v-else class="pt-0">{{movie.title}}</v-card-title>
 
           <!-- Подзаголовок -->
@@ -22,30 +42,36 @@
             <!-- Информация о режисере -->
             <p>
               <span class="grey--text text--lighten-2 pr-2">Режисер:</span>
-              <a class="pr-1" v-for="director in directors" :key="director.id">{{director.name}}</a>
+              <router-link
+                class="pr-1"
+                v-for="director in directors"
+                :key="director.id"
+                :to="{path:`/director/${director.id}`}"
+              >{{director.name}}</router-link>
             </p>
             <p>
               <!-- Год выпуска -->
               <span class="grey--text text--lighten-2 pr-2">{{getMovieYear(movie.release_date)}}</span>
               <!-- Жанр -->
               <span v-for="genre in movie.genres" :key="genre.id">
-                <a class="px-1" href="#">{{genre.name}}</a>
+                <router-link class="mx-1" :to="{path:`/genre/${genre.id}`}">{{genre.name}}</router-link>
                 <v-btn disabled color="grey" fab height="5" width="5"></v-btn>
               </span>
               <!-- Страна производства -->
-              <a
-                class="px-1"
-                v-for="country in movie.production_countries"
-                :key="country.iso_3166_1"
-                href
-              >{{country.iso_3166_1}}&nbsp;</a>
+              <span v-for="(country,index) in movie.production_countries" :key="country.iso_3166_1">
+                <v-btn v-show="index!==0" disabled color="grey" fab height="5" width="5"></v-btn>
+                <router-link
+                  class="mx-1"
+                  :to="{path:`/country/${country.iso_3166_1}`}"
+                >{{country.iso_3166_1}}</router-link>
+              </span>
             </p>
             <!-- Оценка фильма -->
             <p>
               <span>IMDb:</span>
               <span
                 class="grey--text text--lighten-2 ml-2"
-              >{{movie.vote_average}} ({{movie.vote_count}})</span>
+              >{{rating(movie.vote_average)}} ({{movie.vote_count}})</span>
             </p>
           </v-card-text>
 
@@ -72,63 +98,24 @@ export default {
     MovieDecriptionPoster: () =>
       import('@/components/MovieDescription/MovieDecriptionPoster'),
   },
-  methods: {
-    getMovieYear(date) {
-      return date.slice(0, 4);
-    },
-    getCast() {
-      this.$_ApiMixin_getCast(this.id).then((response) => {
-        this.credits = response;
-        // записываю всю нужную информацию для 'Tabs'
-        this.getInfo();
+  props: {
+    title: String,
+  },
+  metaInfo: {
+    titleTemplate() {
+      /* eslint-disable no-console */
+      console.log(this.$route);
 
-        // получаю массив режисеров
-        this.getDirectors();
-      });
-    },
-    getImg() {
-      this.posterImg = this.$_ApiMixin_getImg(this.movie.poster_path, 300);
-    },
-    getInfo() {
-      this.info = {
-        movie: this.movie,
-        cast: this.credits.cast,
-        id: this.id,
-      };
-    },
-    getDirectors() {
-      this.directors = this.credits.crew.filter(
-        (val) => val.department === 'Directing'
-      );
+      return this.$route.params.title || this.$route.params.id;
     },
   },
-  created() {
-    // получаю инфу о фильме
-    this.$_ApiMixin_getMovie(this.id)
-      .then((response) => {
-        this.movie = response;
-      })
-      // потом получаю url постера
-      .then(() => {
-        this.getImg();
-      })
-      // потом получаю весь каст фильма
-      .then(() => {
-        this.getCast();
-      })
-      .then(() => {})
-      // потом убираю заглушки и отображаю контент
-      .then(() => {
-        this.loading = false;
-      });
-  },
+
   data() {
     return {
       loading: true,
       posterImg: '',
-      id: 10345,
       directors: null,
-      info: null,
+      info: {},
       movie: null,
       credits: null,
       tab: null,
@@ -141,10 +128,73 @@ export default {
       ],
     };
   },
+  computed: {
+    id() {
+      return this.$route.params.id;
+    },
+  },
+  created() {
+    // получаю инфу о фильме
+    this.$_ApiMixin_getMovie(this.id)
+      .then((response) => {
+        this.movie = response;
+      })
+      // потом получаю url постера
+      .then(() => {
+        this.getImg();
+      })
+      .then(() => {
+        // потом получаю весь каст фильма
+        this.$_ApiMixin_getCast(this.id)
+          .then((response) => {
+            this.credits = response;
+          })
+          .then(() => {
+            // записываю всю нужную информацию для 'Tabs'
+            this.getInfo();
+            // получаю массив режисеров
+            this.getDirectors();
+          })
+          .then(() => {
+            // потом убираю заглушки и отображаю контент
+            this.loading = false;
+          });
+      });
+  },
+  methods: {
+    getMovieYear(date) {
+      return date.slice(0, 4);
+    },
+    getInfo() {
+      this.info = {
+        movie: this.movie,
+        cast: this.credits.cast,
+        id: this.id,
+      };
+    },
+    getImg() {
+      this.posterImg = this.$_ApiMixin_getImg(this.movie.poster_path, 300);
+    },
+    rating(v) {
+      return v.toString().length === 1 ? `${v}.0` : v;
+    },
+    getDirectors() {
+      this.directors = this.credits.crew.filter(
+        (val) => val.department === 'Directing'
+      );
+    },
+  },
 };
 </script>
 
 <style lang="scss" scoped>
+a {
+  color: white;
+  text-decoration: none;
+  &:hover {
+    color: #ffb300;
+  }
+}
 .sticky {
   top: 20px;
   position: sticky;

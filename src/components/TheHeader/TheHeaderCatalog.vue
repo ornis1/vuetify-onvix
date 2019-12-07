@@ -19,11 +19,6 @@ export default {
     TheHeaderCatalogContent: () =>
       import('@/components/TheHeader/TheHeaderCatalogContent'),
   },
-  watch: {
-    showMenu: function(newVal) {
-      this.$store.dispatch('setCatalog', newVal);
-    },
-  },
 };
 </script>
 <style  scoped>
