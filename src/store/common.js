@@ -2,7 +2,6 @@ export default {
   state: {
     loading: false,
     error: null,
-    catalog: false,
   },
   mutations: {
     setLoading(state, payload) {
@@ -10,9 +9,6 @@ export default {
     },
     setError(state, payload) {
       state.error = payload;
-    },
-    setCatalog(state, payload) {
-      state.catalog = payload;
     },
     clearError(state) {
       state.error = null;
@@ -27,10 +23,6 @@ export default {
     setError({ commit }, payload) {
       commit('setError', payload);
     },
-    // Set catalog
-    setCatalog({ commit }, payload) {
-      commit('setCatalog', payload);
-    },
     // Clear error
     clearError({ commit }) {
       commit('clearError');
@@ -44,10 +36,6 @@ export default {
     // Get error message
     error(state) {
       return state.error;
-    },
-    // Get catalog
-    catalog(state) {
-      return state.catalog;
     },
   },
 };

@@ -8,8 +8,8 @@ export default {
   },
   mutations: {
     add(state, payload) {
-      const { name, movie } = payload;
-      state[name].push(movie);
+      const { type, movie } = payload;
+      state[type].push(movie);
     },
     /**
      *
@@ -19,29 +19,29 @@ export default {
      * @param {Object} result
      */
     set(state, payload) {
-      const { name, result } = payload;
-      state[name] = [...result];
+      const { type, result } = payload;
+      state[type] = [...result];
     },
   },
   actions: {
-    load({ commit }, name) {
+    load({ commit }, type) {
       const user = this.getters.user;
       firebase
         .database()
         .ref()
-        .child(`${user.id}/${name}`)
+        .child(`${user.id}/${type}`)
         .once('value', (snapshot) => {
           let result = snapshot.val();
           if (result) {
             result = Object.values(result);
-            commit('set', { name, result });
+            commit('set', { type, result });
           }
         });
     },
 
-    add({ commit }, { movie, name }) {
+    add({ commit }, { movie, type }) {
       // Проверяю, есть фильм в категории или нет
-      const result = [...this.getters[name]].some((x) => x.id === movie.id);
+      const result = [...this.getters[type]].some((x) => x.id === movie.id);
       // Если нет, то добавляем
       if (!result) {
         /* ПОлучаем ссылку.
@@ -51,26 +51,26 @@ export default {
         const rootRef = firebase.database().ref();
         const userId = this.getters.user.id;
         const updatedMovie = { ...movie };
-        updatedMovie.from = name;
+        updatedMovie.from = type;
 
         rootRef
-          .child(`${userId}/${name}/${updatedMovie.id}`)
+          .child(`${userId}/${type}/${updatedMovie.id}`)
           .update(updatedMovie);
 
-        commit('add', { movie: updatedMovie, name });
+        commit('add', { movie: updatedMovie, type });
       }
     },
 
-    remove({ commit }, { movie, name }) {
-      const result = [...this.getters[name]].filter((x) => x.id !== movie.id);
+    remove({ commit }, { movie, type }) {
+      const result = [...this.getters[type]].filter((x) => x.id !== movie.id);
 
       if (result) {
         const userId = this.getters.user.id;
-        commit('set', { result, name });
+        commit('set', { result, type });
         firebase
           .database()
           .ref()
-          .child(`${userId}/${name}/${movie.id}`)
+          .child(`${userId}/${type}/${movie.id}`)
           .remove();
       }
     },

@@ -1,55 +1,39 @@
 <template>
   <v-app>
-    <TheHeader />
+    <router-view name="header"></router-view>
     <v-content>
-      <v-container :fluid="fluid">
-        <Profile />
-        <!-- <Slider title="Популярные" :movies="popular" :cardSize="'small'" /> -->
-      </v-container>
+      <router-view></router-view>
     </v-content>
-    <TheFooter />
+    <router-view name="footer"></router-view>
   </v-app>
 </template>
 
 <script>
-import TheHeader from '@/components/TheHeader/TheHeader';
-import TheFooter from '@/components/TheFooter';
-import Profile from '@/components/Profile/Profile';
-// import Slider from '@/components/Slider/Slider2';
-import { ApiMixin } from '@/Mixins/ApiMixin.js';
-
 export default {
   name: 'App',
-  mixins: [ApiMixin],
-  components: {
-    TheHeader,
-    TheFooter,
-    Profile,
-    // Slider,
+  metaInfo: {
+    title: 'Onvix',
   },
-  created() {
-    this.$_ApiMixin_getPopularMovies(1).then((data) => {
-      this.popular = data;
-    });
+  beforeMount() {
     window.$vm = this;
-  },
-  data() {
-    return {
-      popular: [],
-    };
-  },
-  computed: {
-    fluid() {
-      return this.$vuetify.breakpoint.xlAndDown;
-    },
-    catalog() {
-      return this.$store.getters.catalog;
-    },
   },
 };
 </script>
-<style>
+<style lang="scss">
 body {
   font-family: 'Courier New', Courier, monospace !important;
+}
+div.v-application {
+  // Заменяю дефолтные цвета темной темы
+  .v-content {
+    background-color: #171717;
+  }
+  .v-toolbar {
+    background-color: #1e1e1e;
+  }
+  & a {
+    color: #fff;
+    text-decoration: none;
+  }
 }
 </style>
