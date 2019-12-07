@@ -5,61 +5,78 @@ export const ApiMixin = {
     return {
       MixinKey: '6c789b97c269e57a2df3bcbc30f04173',
       endpoint: 'https://api.themoviedb.org/3/',
-      lang: 'ru',
-      tmp: '',
-      payload: {},
+      lang: 'ru-RU',
     };
   },
   methods: {
-    $_ApiMixin_getUnique(arr, comp) {
-      var obj = {};
-      arr.map((x) => (obj[x[comp]] = x));
-      return Object.values(obj);
-    },
-    /**
-     *
-     * @param {Array[movie]} arr
-     */
-    $_ApiMixin_sortByDate(arr) {
-      return arr
-        .map((item) => {
-          return { id: item.id, date: Number(item.release_date.slice(0, 4)) };
-        })
-        .sort((a, b) => {
-          return b.date - a.date;
-        })
-        .map((a) => {
-          return arr.filter((b) => b.id == a.id);
-        })
-        .map((i) => i[0]);
-    },
-    $_ApiMixin_getPersonMovies(id) {
-      const request = this.$_ApiMixin_request(
-        'person/' + id + '/movie_credits'
-      );
-      return axios.get(request).then((response) => {
-        /* СДЕЛАТЬ ВАРИАТИВНОСТЬ ДЛЯ АКТЕРОВ И РЕЖИСЕРОВ И Т.д */
-        const crew = response.data.crew;
-        const cast = response.data.cast;
-        const a = crew.length > cast.length;
-        let result = a ? crew : cast;
-        result = this.$_ApiMixin_getUnique(result, 'id');
-        return result;
-      });
+    get(url, params = null) {
+      let request = `${this.endpoint}${url}?api_key=${this.MixinKey}&language=${this.lang}`;
+
+      if (params) {
+        /* Если были переданны параметры, то добавляем их в url запроса */
+        for (const key in params) {
+          if (params.hasOwnProperty(key)) {
+            const value = params[key];
+            request += `&${key}=${value}`;
+          }
+        }
+        // Делаем запрос
+        return axios.get(request);
+      }
+      // Делаем запрос без доп-ых параметров
+      return axios.get(request);
     },
 
+    /* Фильмы актера/режисера */
+    $_ApiMixin_getPersonMovies(id) {
+      return this.get(`person/${id}/movie_credits`).then(
+        (response) => response.data
+      );
+    },
+
+    /* Получить каст фильма */
+    $_ApiMixin_getCast(id) {
+      return this.get(`movie/${id}/credits`).then((response) => response.data);
+    },
+
+    /* Получить информацию о фильме */
+    $_ApiMixin_getMovie(id) {
+      return this.get(`movie/${id}`).then((response) => response.data);
+    },
+
+    /* Получить информацию о актере/режисере */
+    $_ApiMixin_getPerson(id) {
+      return this.get(`person/${id}`).then((response) => response.data);
+    },
+
+    /* Новинки */
+    $_ApiMixin_getNewestMovies(page) {
+      return this.get('trending/movie/week', { page }).then(
+        (response) => response.data.results
+      );
+    },
+
+    /* Найти похожие фильмы / сериалы */
+    $_ApiMixin_getSimilar(id) {
+      return this.get(`movie/${id}/similar`).then((response) => response.data);
+    },
+
+    /* Популярные */
     $_ApiMixin_getPopularMovies(page) {
-      // const request = `https://api.themoviedb.org/3/discover/movie?api_key=6c789b97c269e57a2df3bcbc30f04173&language=ru&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`;
-      const request = this.$_ApiMixin_request('discover/movie', {
+      return this.get('discover/movie', {
         sort_by: 'popularity.desc',
         page,
-      });
-      return axios.get(request).then((response) => response.data.results);
+      }).then((response) => response.data.results);
     },
 
-    $_ApiMixin_getNewestMovies(page) {
-      const request = `https://api.themoviedb.org/3/discover/movie?api_key=6c789b97c269e57a2df3bcbc30f04173&language=ru&sort_by=popularity.desc&include_adult=false&include_video=false&page=${page}`;
-      return axios.get(request).then((response) => response.data.results);
+    /* Жанры сериалов */
+    $_ApiMixin_getTVGenres() {
+      return this.get('genre/tv/list').then((response) => response.data);
+    },
+
+    /* Жанры фильмов */
+    $_ApiMixin_getMovieGenres() {
+      return this.get('genre/movie/list').then((response) => response.data);
     },
 
     $_ApiMixin_getImg(path, size) {
@@ -67,59 +84,18 @@ export const ApiMixin = {
       return `https://image.tmdb.org/t/p/${size}${path}`;
     },
 
-    $_ApiMixin_getMovie(id) {
-      // return this.$_ApiMixin_request('movie/' + id);
-      return axios
-        .get(this.$_ApiMixin_request('movie/' + id))
-        .then((response) => {
-          return response.data;
-        });
+    /* Поиск по ключевому слову */
+    $_ApiMixin_multiSearch(query, page) {
+      return this.get('search/multi', { page, query }).then(
+        (response) => response.data
+      );
     },
 
-    /* Найти похожие фильмы / сериалы */
-    $_ApiMixin_getSimilar(movieId) {
-      const request = this.$_ApiMixin_request('movie/' + movieId + '/similar');
-      return axios.get(request).then((response) => {
-        return response.data;
-      });
-    },
-
-    $_ApiMixin_getCast(id) {
-      const path = `movie/${id}/credits`;
-      const request = this.$_ApiMixin_request(path);
-      return axios.get(request).then((response) => {
-        return response.data;
-      });
-    },
-    $_ApiMixin_getPerson(id) {
-      const request = this.$_ApiMixin_request('person/' + id);
-      return axios.get(request).then((response) => {
-        return response.data;
-      });
-    },
-    $_ApiMixin_multiSearch(query, page = 1) {
-      const request = this.$_ApiMixin_request('search/multi', {
-        query,
-        page: page,
-      });
-      return axios.get(request).then((response) => {
-        return response.data;
-      });
-    },
-    $_ApiMixin_getMoviesByGenre(genreId) {
-      const request = this.$_ApiMixin_request('discover/movie', {
-        with_genres: genreId,
-      });
-      return axios.get(request).then((response) => {
-        return response.data;
-      });
-    },
-    $_ApiMixin_request(path, options = {}) {
-      let request = `${this.endpoint}${path}?api_key=${this.MixinKey}&language=${this.lang}`;
-
-      const keys = Object.keys(options);
-      keys.map((key) => (request += `&${key}=${options[key]}`));
-      return request;
+    /* Поиск фильмов по жанрам */
+    $_ApiMixin_getMoviesByGenre(id) {
+      return this.get('discover/movie', { with_genres: id }).then(
+        (response) => response.data
+      );
     },
   },
 };
