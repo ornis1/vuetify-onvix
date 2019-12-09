@@ -5,6 +5,7 @@ export default {
     favorite: [],
     watched: [],
     watchLater: [],
+    list: ['favorite', 'watched', 'watchLater'],
   },
   mutations: {
     add(state, payload) {
@@ -84,6 +85,9 @@ export default {
     },
     watchLater(state) {
       return state.watchLater;
+    },
+    list(state) {
+      return state.list;
     },
   },
 };

@@ -32,8 +32,19 @@ new Vue({
       storageBucket: 'onvix-clone.appspot.com',
       messagingSenderId: '833323653452',
     };
-
+    /* eslint-disable  */
     firebase.initializeApp(config);
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        // Check Logged
+        this.$store.dispatch('loggedUser', user).then(() => {
+          // Loading All Tasks
+          this.$store.dispatch('load', 'watched');
+          this.$store.dispatch('load', 'favorite');
+          this.$store.dispatch('load', 'watchLater');
+        });
+      }
+    });
   },
   render: (h) => h(App),
 }).$mount('#app');

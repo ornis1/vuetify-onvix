@@ -46,7 +46,7 @@
                 class="pr-1"
                 v-for="director in directors"
                 :key="director.id"
-                :to="{path:`/director/${director.id}`}"
+                :to="{name:'resultWithId',params:{id:director.id, type:'director',title:director.name}}"
               >{{director.name}}</router-link>
             </p>
             <p>
@@ -54,7 +54,10 @@
               <span class="grey--text text--lighten-2 pr-2">{{getMovieYear(movie.release_date)}}</span>
               <!-- Жанр -->
               <span v-for="genre in movie.genres" :key="genre.id">
-                <router-link class="mx-1" :to="{path:`/genre/${genre.id}`}">{{genre.name}}</router-link>
+                <router-link
+                  class="mx-1"
+                  :to="{name:'resultWithId', params:{ type:'genre',id:genre.id, title:genre.name}}"
+                >{{genre.name}}</router-link>
                 <v-btn disabled color="grey" fab height="5" width="5"></v-btn>
               </span>
               <!-- Страна производства -->
@@ -78,7 +81,14 @@
           <!--  -->
           <v-skeleton-loader v-if="loading" class="d-flex mt-10" type="button@5" max-width="250"></v-skeleton-loader>
           <v-skeleton-loader v-if="loading" class="mt-5" type="image"></v-skeleton-loader>
-          <MovieDescriptionTabs v-else :info="info" />
+          <MovieDescriptionTabs
+            v-else
+            :overview="movie.overview"
+            :movie="movie"
+            :cast="cast"
+            :id="movie.id"
+            :info="info"
+          />
         </v-card>
       </v-col>
     </v-row>
@@ -132,36 +142,51 @@ export default {
     id() {
       return this.$route.params.id;
     },
+    cast() {
+      let cast = this.credits.cast;
+      cast = cast.filter((v) => v.profile_path);
+      cast.length = cast.length >= 10 ? 10 : cast.length;
+      return cast;
+    },
+  },
+  watch: {
+    '$route.path'() {
+      this.getMovie();
+    },
   },
   created() {
-    // получаю инфу о фильме
-    this.$_ApiMixin_getMovie(this.id)
-      .then((response) => {
-        this.movie = response;
-      })
-      // потом получаю url постера
-      .then(() => {
-        this.getImg();
-      })
-      .then(() => {
-        // потом получаю весь каст фильма
-        this.$_ApiMixin_getCast(this.id)
-          .then((response) => {
-            this.credits = response;
-          })
-          .then(() => {
-            // записываю всю нужную информацию для 'Tabs'
-            this.getInfo();
-            // получаю массив режисеров
-            this.getDirectors();
-          })
-          .then(() => {
-            // потом убираю заглушки и отображаю контент
-            this.loading = false;
-          });
-      });
+    this.getMovie();
   },
   methods: {
+    getMovie() {
+      // получаю инфу о фильме
+      this.$_ApiMixin_getMovie(this.id)
+        .then((response) => {
+          console.log('TCL: getMovie -> response', response.id);
+          this.movie = response;
+        })
+        // потом получаю url постера
+        .then(() => {
+          this.getImg();
+        })
+        .then(() => {
+          // потом получаю весь каст фильма
+          this.$_ApiMixin_getCast(this.id)
+            .then((response) => {
+              this.credits = response;
+            })
+            .then(() => {
+              // записываю всю нужную информацию для 'Tabs'
+              this.getInfo();
+              // получаю массив режисеров
+              this.getDirectors();
+            })
+            .then(() => {
+              // потом убираю заглушки и отображаю контент
+              this.loading = false;
+            });
+        });
+    },
     getMovieYear(date) {
       return date.slice(0, 4);
     },

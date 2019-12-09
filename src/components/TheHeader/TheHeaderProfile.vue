@@ -3,7 +3,8 @@
     <template v-slot:activator="{on}">
       <v-btn v-on="on" text tile height="66" width="66">
         <v-avatar>
-          <img src="https://cdn.vuetifyjs.com/images/lists/2.jpg" alt />
+          <img v-if="avatar" :src="avatar" alt />
+          <v-icon v-else large>mdi-account-circle</v-icon>
         </v-avatar>
       </v-btn>
 
@@ -14,11 +15,12 @@
         <v-list-item-group color="#2f7cda">
           <v-list-item class="pl-6">
             <v-list-item-avatar>
-              <v-img src="https://cdn.vuetifyjs.com/images/lists/2.jpg"></v-img>
+              <v-img v-if="avatar" :src="avatar"></v-img>
+              <v-icon v-else large>mdi-account</v-icon>
             </v-list-item-avatar>
             <v-list-item-content>
-              <v-list-item-title>Marat</v-list-item-title>
-              <v-list-item-subtitle>fastmarat23@gmail.com</v-list-item-subtitle>
+              <v-list-item-title>{{name}}</v-list-item-title>
+              <v-list-item-subtitle>{{email}}</v-list-item-subtitle>
             </v-list-item-content>
           </v-list-item>
           <v-divider></v-divider>
@@ -48,10 +50,27 @@ export default {
   data() {
     return {};
   },
+  computed: {
+    name() {
+      return this.user !== null ? this.user.name : '';
+    },
+    email() {
+      return this.user !== null ? this.user.email : '';
+    },
+    user() {
+      return this.$store.getters.user;
+    },
+    avatar() {
+      return this.user !== null ? this.user.photoUrl : '';
+    },
+  },
   methods: {
     logout() {
-      this.$store.dispatch('signOut');
-      this.$router.push('/login');
+      this.$store.dispatch('signOut').then(() => {
+        this.$router.push('/login').catch((error) => {
+          throw error;
+        });
+      });
     },
   },
 };

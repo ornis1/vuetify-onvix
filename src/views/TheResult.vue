@@ -1,20 +1,25 @@
 <template>
   <v-container>
     <h1 class="d-block title">{{title}}</h1>
-    <v-container class="transparent mx-auto" infinite-scroll-distance="1">
-      <!-- v-infinite-scroll="loadMore" -->
+    <v-container class="transparent mx-auto">
       <v-row class justify="space-around">
         <keep-alive v-for="(movie) in movies" :key="movie.id">
           <MovieCard :movie="movie" size="small" />
         </keep-alive>
         <v-card color="transparent" flat v-for="n in 10" :key="n" width="236"></v-card>
       </v-row>
+      <v-row v-if="hidden" justify="center">
+        <v-btn @click="loadContent" :disabled="disabled" :loading="loading">
+          <span v-if="disabled">Больше нечего загружать</span>
+          <span v-else>Загрузить ещё</span>
+        </v-btn>
+      </v-row>
     </v-container>
   </v-container>
 </template>
 
 <script>
-import infiniteScroll from 'vue-infinite-scroll';
+/* eslint-disable  */
 import MovieCard from '@/components/MovieCard/MovieCard';
 import { ApiMixin } from '@/Mixins/ApiMixin';
 
@@ -22,26 +27,19 @@ export default {
   name: 'result',
   components: { MovieCard },
   mixins: [ApiMixin],
-  // metaInfo() {
-  //   return {
-  //     meta: [{ name: 'title', content: 'his.title' }],
-  //   };
-  // },
   metaInfo: {
     titleTemplate() {
       return this.$route.params.title;
     },
   },
-  directives: { infiniteScroll },
   data() {
     return {
+      disabled: false,
+      after: 0,
       id: null,
       type: null,
       page: 1,
       movies: [],
-      busy: false,
-      isDisabled: false,
-      timeoutID: null,
       types: {
         search: 'loadMultiSearch',
         watched: 'loadWatchedMovies',
@@ -58,23 +56,28 @@ export default {
 
   computed: {
     title() {
-      return 'Доделай меня';
-      // const titles = {
-      // 	collections: {
-      // 		popular: 'Популярные',
-      // 		newest: 'Новые фильмы',
-      // 		watched: 'Просмотренные',
-      // 		watch_later: 'Смотреть позже',
-      // 		favorite: 'Избранные',
-      // 	},
-      // 	actor: `Актер ${this.$route.params.title}`,
-      // 	director: `Режисер ${this.$route.params.title}`,
-      // 	search: `Результат поиска «${this.$route.query.q}»`,
-      // };
-      // const name = this.$route.name;
-      // const category = this.$route.params.category;
-
-      // return name !== 'collections' ? titles[name] : titles[name][category];
+      const titles = {
+        popular: 'Популярные',
+        newest: 'Новые фильмы',
+        watched: 'Просмотренные',
+        watchLater: 'Смотреть позже',
+        favorite: 'Избранное',
+        actor: `Актер ${this.$route.params.title}`,
+        director: `Режисер ${this.$route.params.title}`,
+        search: `Результат поиска «${this.$route.query.q}»`,
+        genre: `Фильмы с жанром «${this.$route.params.title}»`,
+      };
+      const type = this.$route.params.type;
+      return titles[type];
+    },
+    loading() {
+      return this.$store.getters.loading;
+    },
+    hidden() {
+      // Показываем кнопку загрузить еще только на этих роутах
+      return ['popular', 'newest', 'search', 'genre'].some(
+        (v) => v === this.type
+      );
     },
     // Достаем "запрос" пользователя, для передачи в api
     query() {
@@ -82,21 +85,32 @@ export default {
     },
   },
   watch: {
-    $route() {
-      /* РАБОТАЕТ С КОЛЛЕКЦИЯМИ */
-      this.page = 1;
+    '$route.path'() {
+      /* Обновляем результат выдачи при изменении роута, а также если были добавлены или удалены фильмы из $store */
       this.movies = [];
+      this.page = 1;
       this.loadContent();
     },
     '$route.query.q'() {
       // Иначе загружаем контент
+      this.movies = [];
+      this.page = 1;
       this.loadContent();
     },
     deep: true,
   },
   methods: {
+    // Убирает из массива объектов повторы
+    uniqueMovies(array) {
+      let unique = {};
+      array.map((movie) => {
+        unique[movie['id']] = movie;
+      });
+      return (unique = Object.values(unique));
+    },
+
     // Фильтруем по пустым свойствам
-    filterByEmptyProperty() {
+    async filterByEmptyProperty() {
       this.movies = this.movies
         .filter((x) => x.poster_path)
         .filter((x) => x.title)
@@ -108,78 +122,91 @@ export default {
           return b - a;
         });
     },
-    loadContent() {
+    loadContent(state) {
       // Достаем данные из роута
       this.type = this.$route.params.type;
       this.id = this.$route.params.id || null;
 
       /* eslint-disable  */
       // Получаем название метода по которому делается запрос
-      const methodsName = this.types[this.type];
-      console.log('TCL: loadContent -> methodsName', methodsName);
       // Вызываем функцию из экземпляра текущего компонента
-      this[methodsName]();
+      const methodsName = this.types[this.type];
+      // console.log('TCL: loadContent -> methodsName', methodsName);
+
+      this[methodsName]().then(() => {
+        this.page++;
+      });
     },
 
     // Поиск по результату ввода в строке поиска
-    loadMultiSearch() {
+    async loadMultiSearch() {
       this.$_ApiMixin_multiSearch(this.query, this.page).then((response) => {
-        this.movies = response.results;
-        this.filterByEmptyProperty();
+        this.movies.push(...response.results);
+
+        const before = this.after;
+        this.filterByEmptyProperty().then(() => {
+          this.after = this.movies.length;
+          if (before === this.after) {
+            this.disabled = true;
+          }
+        });
       });
     },
 
     /* Загрузка просмотренных фильмов */
-    loadWatchedMovies() {
+    async loadWatchedMovies() {
       this.movies = this.$store.getters.watched;
     },
 
     /* Загрузка отложенных на потом фильмов */
-    loadWatchLaterMovies() {
+    async loadWatchLaterMovies() {
       this.movies = this.$store.getters.watchLater;
     },
 
     /* Загрузка любимых фильмов */
-    loadFavoriteMovies() {
+    async loadFavoriteMovies() {
       this.movies = this.$store.getters.favorite;
     },
 
     /* Поплярные фильмы */
-    loadPopularMovies() {
+    async loadPopularMovies() {
       this.$_ApiMixin_getPopularMovies(this.page).then((response) => {
-        this.movies = [...this.movies, ...response];
+        this.movies.push(...response);
         this.filterByEmptyProperty();
       });
     },
     /* Новые фильмы */
-    loadNewestMovies() {
+    async loadNewestMovies() {
       this.$_ApiMixin_getNewestMovies(this.page).then((response) => {
-        this.movies = [...this.movies, ...response];
+        this.movies.push(...response);
         this.filterByEmptyProperty();
         // this.busy = false;
       });
     },
+
     /* Фильмы актера/ режисера??? */
-    loadDirectorMovies() {
+    async loadDirectorMovies() {
       this.$_ApiMixin_getPersonMovies(this.id).then((response) => {
-        this.movies = [...this.movies, ...response.crew];
+        const unique = this.uniqueMovies(response.crew);
+        this.movies.push(...unique);
         this.filterByEmptyProperty();
       });
     },
-    loadActorMovies() {
+    async loadActorMovies() {
       this.$_ApiMixin_getPersonMovies(this.id).then((response) => {
-        this.movies = [...this.movies, ...response.cast];
+        this.movies.push(...response.cast);
         this.filterByEmptyProperty();
       });
     },
-    loadMoviesByGenre() {
-      this.$_ApiMixin_getMoviesByGenre(this.id).then((response) => {
-        this.movies = [...this.movies, ...response.results];
+    async loadMoviesByGenre() {
+      this.$_ApiMixin_getMoviesByGenre(this.id, this.page).then((response) => {
+        this.movies.push(...response.results);
         this.filterByEmptyProperty();
       });
     },
   },
   created() {
+    this.page = 1;
     this.loadContent();
   },
 };

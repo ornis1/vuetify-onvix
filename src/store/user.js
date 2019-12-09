@@ -11,12 +11,7 @@ class User {
 
 export default {
   state: {
-    user: {
-      id: 'UsG3T1ZcFBWPkOImWjTaCjX4aBh2',
-      name: null,
-      email: 'asda@asd.cas',
-      photoUrl: null,
-    },
+    user: null,
   },
 
   mutations: {
@@ -25,40 +20,141 @@ export default {
     },
   },
   actions: {
-    /* 
-
-logIn
-logOut
-
-*/
-
-    async updateProfile({ dispatch }, { login, password, email, photo }) {
-      if (login) dispatch('updatelogin', login);
-      if (password) dispatch('updatePassword', password);
-      if (email) dispatch('updateEmail', email);
-      if (photo) dispatch('updatePhoto', photo);
+    async deletePhoto({ dispatch }) {
+      // Удаляем url фото на сервере и в store
+      // dispatch('updateProfile', { photo: null });
+      const user = firebase.auth().currentUser;
+      user
+        .updateProfile({
+          photoURL: '',
+        })
+        .then(() => {
+          dispatch('loggedUser');
+          dispatch('setLoading', false);
+        })
+        .catch((error) => {
+          dispatch('setError', error.message);
+          dispatch('setLoading', false);
+          throw error;
+        });
     },
 
-    async registration({ commit }, { email, password }) {
-      commit('clearError');
-      commit('setLoading', true);
+    async updatePhoto({ dispatch }, file) {
+      dispatch('setLoading', true);
+      const user = firebase.auth().currentUser;
+
+      // Create a Storage Ref w/ username
+      const storageRef = firebase
+        .storage()
+        .ref(`${user.uid}/profilePicture/${file.name}`);
+
+      // Upload file
+      storageRef.put(file);
+
+      storageRef
+        .getDownloadURL()
+        .then((downloadURL) => {
+          const user = firebase.auth().currentUser;
+          user
+            .updateProfile({
+              photoURL: downloadURL,
+            })
+            .then(() => {
+              dispatch('loggedUser');
+              dispatch('setLoading', false);
+            })
+            .catch((error) => {
+              dispatch('setError', error.message);
+              dispatch('setLoading', false);
+              throw error;
+            });
+        })
+        .catch((error) => {
+          dispatch('setLoading', false);
+          throw error;
+        });
+    },
+
+    /* Обновить логин */
+    async updateName({ dispatch }, { name }) {
+      dispatch('setLoading', true);
+
+      const user = firebase.auth().currentUser;
+      user
+        .updateProfile({
+          displayName: name,
+        })
+        .then(() => {
+          dispatch('loggedUser');
+          dispatch('setLoading', false);
+        })
+        .catch((error) => {
+          dispatch('setError', error.message);
+          dispatch('setLoading', false);
+          throw error;
+        });
+    },
+
+    async updateEmail({ dispatch }, { email }) {
+      dispatch('setLoading', true);
+      const user = firebase.auth().currentUser;
+
+      user
+        .updateEmail(email)
+        .then(() => {
+          // Update successful.
+          dispatch('loggedUser');
+          dispatch('setLoading', false);
+          console.log('Update successful');
+        })
+        .catch((error) => {
+          dispatch('setError', error.message);
+          dispatch('setLoading', false);
+          console.log('An error happened.');
+          throw error;
+        });
+    },
+
+    async updatePassword({ dispatch }, { password }) {
+      dispatch('setLoading', true);
+      var user = firebase.auth().currentUser;
+
+      user
+        .updatePassword(password)
+        .then(() => {
+          // Update successful.
+          dispatch('loggedUser');
+          dispatch('setLoading', false);
+          console.log('Update successful');
+        })
+        .catch((error) => {
+          dispatch('setError', error.message);
+          dispatch('setLoading', false);
+          console.log('An error happened.');
+          throw error;
+        });
+    },
+
+    async registration({ commit, dispatch }, { email, password }) {
+      dispatch('clearError');
+      dispatch('setLoading', true);
       try {
         const user = await firebase
           .auth()
           .createUserWithEmailAndPassword(email, password);
         commit('setUser', new User(user.user.uid, email));
-        commit('setLoading', false);
+        dispatch('setLoading', false);
       } catch (error) {
-        commit('setLoading', false);
-        commit('setError', error.message);
+        dispatch('setLoading', false);
+        dispatch('setError', error.message);
         throw error;
       }
     },
 
     // Эта функция идеальная
-    async logIn({ commit }, { email, password }) {
-      commit('clearError');
-      commit('setLoading', true);
+    async logIn({ commit, dispatch }, { email, password }) {
+      dispatch('clearError');
+      dispatch('setLoading', true);
       try {
         const user = await firebase
           .auth()
@@ -73,50 +169,37 @@ logOut
             user.user.photoURL
           )
         );
-        commit('setLoading', false);
+        dispatch('setLoading', false);
       } catch (error) {
-        commit('setLoading', false);
-        commit('setError', error.message);
+        dispatch('setLoading', false);
+        dispatch('setError', error.message);
         throw error;
       }
     },
-    /* ****************** */
-    /* Проверяем онлайн пользователя */
+    async loggedUser({ commit }, user) {
+      console.log('loggedUser');
+      localStorage.setItem('id', user.uid);
+      commit(
+        'setUser',
+        new User(user.uid, user.displayName, user.email, user.photoURL)
+      );
+    },
 
-    async loggedUser({ commit }) {
-      console.log('TCL: loggedUser -> loggedUser');
-      firebase.auth().onAuthStateChanged((user) => {
-        if (user) {
-          // User is signed in.
-          commit(
-            'setUser',
-            new User(user.uid, user.displayName, user.email, user.photoURL)
-          );
-          console.log('User ONLINE');
-          return;
-        }
-        console.log('No user is signed in');
-      });
-    },
-    async getUser() {
-      return firebase.auth().currentUser;
-    },
-    /* ****************** */
-    async signOut({ commit }) {
-      firebase
+    async signOut({ commit, dispatch }) {
+      dispatch('setLoading', true);
+      await firebase
         .auth()
         .signOut()
         .then(() => {
           // Sign-out successful.
           commit('setUser', null);
-          // commit('setOnline', false);
-          console.log('Юзер вышел из аккаунта');
-
-          console.log('Sign-out successful');
+          localStorage.removeItem('id');
+          dispatch('setLoading', false);
         })
         .catch((error) => {
+          dispatch('setLoading', false);
+          dispatch('setError', error.message);
           throw error;
-          // An error happened.
         });
     },
   },
@@ -125,8 +208,7 @@ logOut
       return state.user;
     },
     checkUser(state) {
-      // return state.user !== null;
-      return true;
+      return state.user !== null;
     },
   },
 };

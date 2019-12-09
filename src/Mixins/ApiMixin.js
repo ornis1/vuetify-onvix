@@ -62,8 +62,8 @@ export const ApiMixin = {
     },
 
     /* Популярные */
-    $_ApiMixin_getPopularMovies(page) {
-      return this.get('discover/movie', {
+    async $_ApiMixin_getPopularMovies(page) {
+      return await this.get('discover/movie', {
         sort_by: 'popularity.desc',
         page,
       }).then((response) => response.data.results);
@@ -92,8 +92,8 @@ export const ApiMixin = {
     },
 
     /* Поиск фильмов по жанрам */
-    $_ApiMixin_getMoviesByGenre(id) {
-      return this.get('discover/movie', { with_genres: id }).then(
+    $_ApiMixin_getMoviesByGenre(id, page) {
+      return this.get('discover/movie', { with_genres: id, page }).then(
         (response) => response.data
       );
     },

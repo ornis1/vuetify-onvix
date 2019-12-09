@@ -58,9 +58,13 @@ export default {
   data() {
     return {
       swiperOptions: {
-        small: {
+        general: {
           simulateTouch: false,
+          watchSlidesProgress: false,
           spaceBetween: 5,
+          observeParents: true,
+        },
+        small: {
           slidesPerView: 8,
           step: 3,
           breakpoints: {
@@ -80,8 +84,6 @@ export default {
           },
         },
         big: {
-          spaceBetween: 5,
-          simulateTouch: false,
           slidesPerView: 3,
           step: 1,
           breakpoints: {
@@ -114,15 +116,22 @@ export default {
       return this.swiperOptions[this.size].step;
     },
     options() {
-      return this.swiperOptions[this.size];
+      return {
+        ...this.swiperOptions[this.size],
+        ...this.swiperOptions.general,
+      };
     },
   },
   methods: {
-    async slideNext() {
+    slideNext() {
       const index = this.swiper.activeIndex;
       const len = this.movies.length;
       const step = this.step;
-      const condition = len - (index + step) <= 6;
+      const list = this.$store.getters.list;
+      const category = this.category;
+      // /* eslint-disable  */
+      const condition =
+        len - (index + step) <= 6 && !list.some((v) => v === category);
       this.swiper.slideTo(this.swiper.activeIndex + this.step, 500, false);
       if (condition) {
         this.loadMovies();

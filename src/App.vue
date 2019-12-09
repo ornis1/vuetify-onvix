@@ -9,13 +9,41 @@
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'App',
   metaInfo: {
     title: 'Onvix',
   },
-  beforeMount() {
+
+  created() {
     window.$vm = this;
+    axios.interceptors.request.use(
+      (config) => {
+        // trigger 'loading=true' event here
+        this.$store.dispatch('setLoading', true);
+        return config;
+      },
+      (error) => {
+        // trigger 'loading=false' event here
+        this.$store.dispatch('setLoading', false);
+        return Promise.reject(error);
+      }
+    );
+
+    axios.interceptors.response.use(
+      (response) => {
+        // trigger 'loading=false' event here
+        this.$store.dispatch('setLoading', false);
+        return response;
+      },
+      (error) => {
+        // trigger 'loading=false' event here
+        this.$store.dispatch('setLoading', false);
+        return Promise.reject(error);
+      }
+    );
   },
 };
 </script>

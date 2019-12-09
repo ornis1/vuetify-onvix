@@ -34,10 +34,10 @@ export default {
   name: 'TheHeader',
   components: {
     TheHeaderCatalog: () => import('./TheHeaderCatalog'),
-    TheHeaderReplay: () => import('./TheHeaderSearch'),
+    TheHeaderReplay: () => import('./TheHeaderReplay'),
     TheHeaderProfile: () => import('./TheHeaderProfile'),
-    TheHeaderNotification: () => import('./TheHeaderReplay'),
-    TheHeaderSearch: () => import('./TheHeaderNotification'),
+    TheHeaderNotification: () => import('./TheHeaderNotification'),
+    TheHeaderSearch: () => import('./TheHeaderSearch'),
   },
   computed: {
     loading() {

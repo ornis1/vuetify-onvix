@@ -4,7 +4,7 @@
       <v-tabs-slider></v-tabs-slider>
 
       <v-tab
-        class="px-10"
+        class="px-10 body-2"
         v-for="(link,index) of links"
         :key="index"
         :href="`#tab-${index}` "
@@ -25,7 +25,7 @@
             <router-link
               :to="{name:'resultWithId' ,params: { id: genre.id,type: 'genre',  title: genre.name,}}"
             >
-              <v-btn class="black--text" text block height="48">{{genre.name}}</v-btn>
+              <v-btn small class="black--text" text block height="36">{{genre.name}}</v-btn>
             </router-link>
           </li>
         </v-list>

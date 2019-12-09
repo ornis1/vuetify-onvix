@@ -25,14 +25,15 @@
 </template>
 
 <script>
-import Slider from '@/components/Slider/Slider';
 import { ApiMixin } from '@/Mixins/ApiMixin.js';
 export default {
   name: 'TheHome',
   components: {
-    Slider,
+    Slider: () => import('@/components/Slider/Slider'),
   },
-
+  metaInfo: {
+    title: 'Onvix',
+  },
   mixins: [ApiMixin],
   data() {
     return {
@@ -55,7 +56,6 @@ export default {
   },
   methods: {
     loadMore(category) {
-      this.$store.dispatch('setLoading', true);
       this[category].page++;
       switch (category) {
         case 'newest':
@@ -74,15 +74,12 @@ export default {
       });
     },
     loadNewestMovies() {
-      this.$_ApiMixin_getNewestMovies(this.popular.page).then((data) => {
+      this.$_ApiMixin_getNewestMovies(this.newest.page).then((data) => {
         this.newest.data = [...this.newest.data, ...data];
       });
     },
   },
   created() {
-    this.$store.dispatch('load', 'watched');
-    this.$store.dispatch('load', 'favorite');
-    this.$store.dispatch('load', 'watchLater');
     this.loadPopularMovies();
     this.loadNewestMovies();
   },

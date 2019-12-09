@@ -19,8 +19,8 @@
           required
           autocomplete
           clearable
-          :success="emailSuccess"
-          :error-messages="emailErrors"
+          :success="success('email')"
+          :error-messages="error('email')"
           :error="!!storeError"
         ></v-text-field>
 
@@ -35,8 +35,8 @@
           label="Password"
           required
           autocomplete
-          :success="passwordSuccess"
-          :error-messages="passwordErrors"
+          :success="success('password')"
+          :error-messages="error('password')"
           :error="!!storeError"
           counter
         ></v-text-field>
@@ -82,8 +82,8 @@ export default {
   data() {
     return {
       form: {
-        email: 'asda@asd.cas',
-        password: 'asda@asd.cas',
+        email: '',
+        password: '',
       },
       registration: false,
       showPassword: false,
@@ -93,34 +93,32 @@ export default {
     loading() {
       return this.$store.getters.loading;
     },
-    emailSuccess() {
-      return !this.$v.form.email.$invalid && !!this.$v.form.email.$model;
-    },
-    passwordSuccess() {
-      return !this.$v.form.password.$invalid && !!this.$v.form.password.$model;
-    },
-    emailErrors() {
-      const { email, required } = this.$v.form.email;
-      const errors = [];
-      if (!this.$v.form.email.$dirty) return errors;
-      !required && errors.push('Email is required');
-      !email && errors.push('Email must be a valid');
-      return errors;
-    },
-    passwordErrors() {
-      /* eslint-disable no-console */
-      const { minLength, required } = this.$v.form.password;
-      const errors = [];
-      if (!this.$v.form.password.$dirty) return errors;
-      !required && errors.push('Password is required');
-      !minLength && errors.push('Password must be at most 8 characters');
-      return errors;
-    },
     storeError() {
       return this.$store.getters.error;
     },
   },
   methods: {
+    success(input) {
+      return !this.$v.form[input].$invalid && !!this.$v.form[input].$model;
+    },
+    error(input) {
+      const errors = [];
+      this.$v.form[input].$touch();
+      const { minLength, email } = this.$v.form[input];
+      if (!this.$v.form[input].$dirty) return errors;
+      const obj = {
+        email: () => {
+          !required && errors.push('Email is required');
+          !email && errors.push('Email must be a valid');
+        },
+        password: () => {
+          !required && errors.push('Password is required');
+          !minLength && errors.push('Password must be at most 8 characters');
+        },
+      };
+      obj[input]();
+      return errors;
+    },
     submit() {
       this.$v.form.$touch();
 
