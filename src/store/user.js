@@ -29,7 +29,7 @@ export default {
           photoURL: '',
         })
         .then(() => {
-          dispatch('loggedUser');
+          dispatch('loggedUser', user);
           dispatch('setLoading', false);
         })
         .catch((error) => {
@@ -60,7 +60,7 @@ export default {
               photoURL: downloadURL,
             })
             .then(() => {
-              dispatch('loggedUser');
+              dispatch('loggedUser', user);
               dispatch('setLoading', false);
             })
             .catch((error) => {
@@ -85,7 +85,7 @@ export default {
           displayName: name,
         })
         .then(() => {
-          dispatch('loggedUser');
+          dispatch('loggedUser', user);
           dispatch('setLoading', false);
         })
         .catch((error) => {
@@ -103,7 +103,7 @@ export default {
         .updateEmail(email)
         .then(() => {
           // Update successful.
-          dispatch('loggedUser');
+          dispatch('loggedUser', user);
           dispatch('setLoading', false);
           console.log('Update successful');
         })
@@ -123,7 +123,7 @@ export default {
         .updatePassword(password)
         .then(() => {
           // Update successful.
-          dispatch('loggedUser');
+          dispatch('loggedUser', user);
           dispatch('setLoading', false);
           console.log('Update successful');
         })

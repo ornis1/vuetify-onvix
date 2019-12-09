@@ -10,7 +10,12 @@
         </v-col>
         <input class="d-flex align-self-end mb-4" type="file" @change="changeAvatar" />
       </v-row>
-      <v-form v-for="input in form.inputs" :key="input.label" @submit.prevent="update(input.model)">
+      <v-form
+        v-for="(input,index) in form.inputs"
+        :key="input.label"
+        :ref="`form${index}`"
+        @submit.prevent="submit(input.model, `form${index}`)"
+      >
         <v-text-field
           color="white"
           class="my-4 align-baseline"
@@ -19,13 +24,12 @@
           clearable
           autocomplete
           v-model.trim.lazy="$v.form[input.model].$model"
-          :success="success(input.model)"
-          :error-messages="error(input.model)"
+          :rules="input.rules"
           v-model="form[input.model]"
           :label="input.label"
           :type="input.type"
         >
-          <v-btn @click.prevent="update(input.model)" slot="append-outer">
+          <v-btn @click.prevent="submit(input.model, `form${index}`)" slot="append-outer">
             <v-icon left>mdi-lead-pencil</v-icon>Изменить
           </v-btn>
         </v-text-field>
@@ -62,8 +66,6 @@
 
 <script>
 /* eslint-disable  */
-import { validationMixin } from 'vuelidate';
-import { minLength, email } from 'vuelidate/lib/validators';
 
 export default {
   name: 'Profile',
@@ -80,13 +82,26 @@ export default {
           type: 'text',
           model: 'name',
           icon: 'mdi-account-circle',
+          rules: [
+            (v) => (v && v.length > 2) || 'Name must be more than 2 characters',
+          ],
         },
-        { label: 'Почта', type: 'email', model: 'email', icon: 'mdi-mail' },
+        {
+          label: 'Почта',
+          type: 'email',
+          model: 'email',
+          icon: 'mdi-mail',
+          rules: [(v) => /.+@.+\..+/.test(v) || 'E-mail must be valid'],
+        },
         {
           label: 'Пароль',
           type: 'password',
           model: 'password',
           icon: 'mdi-lock',
+          rules: [
+            (v) =>
+              (v && v.length > 8) || 'Password must be more than 8 characters',
+          ],
         },
       ],
       radiosAnswer: [],
@@ -113,57 +128,22 @@ export default {
   metaInfo: {
     title: 'Profile',
   },
-  mixins: [validationMixin],
-  validations: {
-    form: {
-      email: {
-        email,
-      },
-      name: {
-        minLength: minLength(3),
-      },
-      password: {
-        minLength: minLength(8),
-      },
-    },
-  },
   computed: {
     img() {
       /* eslint-disable  */
-      const avatar = this.$store.getters.user.photoUrl;
-      return avatar ? avatar : '';
+      const user = this.$store.getters.user;
+      const avatar = user !== null ? user.photoUrl : '';
+      return avatar !== null ? avatar : '';
     },
   },
   methods: {
-    success(input) {
-      return !this.$v.form[input].$invalid && !!this.$v.form[input].$model;
-    },
-    error(input) {
-      const errors = [];
-      this.$v.form[input].$touch();
-      const { minLength, email } = this.$v.form[input];
-      if (!this.$v.form[input].$dirty) return errors;
-      const obj = {
-        name: () => {
-          !minLength && errors.push('Name must be at most 3 characters');
-        },
-        email: () => {
-          !email && errors.push('Email must be a valid');
-        },
-        password: () => {
-          !minLength && errors.push('Password must be at most 8 characters');
-        },
-      };
-      obj[input]();
-      return errors;
-    },
-    update(value) {
+    submit(value, formRef) {
       const functions = {
         name: this.updateName,
         email: this.updateEmail,
         password: this.updatePassword,
       };
-      if (this.success(value)) {
+      if (this.$refs[formRef][0].validate()) {
         functions[value]();
       }
     },

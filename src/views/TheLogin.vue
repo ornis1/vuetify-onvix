@@ -8,9 +8,9 @@
       ></v-img>
     </v-card-text>
     <v-card-actions>
-      <v-form>
+      <v-form @submit.prevent="submit()" ref="form">
         <v-text-field
-          v-model.trim.lazy="$v.form.email.$model"
+          v-model.trim.lazy="form.email"
           background-color="grey darken-4"
           autofocus
           prepend-inner-icon="mdi-email"
@@ -19,8 +19,7 @@
           required
           autocomplete
           clearable
-          :success="success('email')"
-          :error-messages="error('email')"
+          :rules="emailRules"
           :error="!!storeError"
         ></v-text-field>
 
@@ -30,20 +29,20 @@
           :append-icon="showPassword ? 'mdi-eye':'mdi-eye-off'"
           :type="showPassword ?'text' :  'password'"
           @click:append="showPassword =! showPassword"
-          v-model.trim.lazy="$v.form.password.$model"
+          v-model.trim.lazy="form.password"
           solo
           label="Password"
           required
           autocomplete
-          :success="success('password')"
-          :error-messages="error('password')"
+          :rules="passwordRules"
           :error="!!storeError"
           counter
         ></v-text-field>
         <v-checkbox v-model="registration" color="primary" label="Зарегестрироваться"></v-checkbox>
         <v-btn
           :loading="loading"
-          @click="submit"
+          type="submit"
+          @submit.prevent="submit"
           block
         >{{!registration ? 'Войти на сайт': 'Зарегестрироваться'}}</v-btn>
       </v-form>
@@ -57,25 +56,9 @@
   </v-card>
 </template>
 <script>
-import { validationMixin } from 'vuelidate';
-import { minLength, required, email } from 'vuelidate/lib/validators';
-
 export default {
   name: 'TheLogin',
 
-  mixins: [validationMixin],
-  validations: {
-    form: {
-      email: {
-        email,
-        required,
-      },
-      password: {
-        required,
-        minLength: minLength(8),
-      },
-    },
-  },
   metaInfo: {
     title: 'Login',
   },
@@ -85,6 +68,14 @@ export default {
         email: '',
         password: '',
       },
+      emailRules: [
+        (v) => !!v || 'E-mail is required',
+        (v) => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+      ],
+      passwordRules: [
+        (v) => !!v || 'Password is required',
+        (v) => (v && v.length > 8) || 'Password must be more than 8 characters',
+      ],
       registration: false,
       showPassword: false,
     };
@@ -98,32 +89,11 @@ export default {
     },
   },
   methods: {
-    success(input) {
-      return !this.$v.form[input].$invalid && !!this.$v.form[input].$model;
-    },
-    error(input) {
-      const errors = [];
-      this.$v.form[input].$touch();
-      const { minLength, email } = this.$v.form[input];
-      if (!this.$v.form[input].$dirty) return errors;
-      const obj = {
-        email: () => {
-          !required && errors.push('Email is required');
-          !email && errors.push('Email must be a valid');
-        },
-        password: () => {
-          !required && errors.push('Password is required');
-          !minLength && errors.push('Password must be at most 8 characters');
-        },
-      };
-      obj[input]();
-      return errors;
-    },
     submit() {
-      this.$v.form.$touch();
-
       // Проверяем валидность формы
-      if (!this.$v.$invalid) {
+      // console.log(this.$refs.form);
+
+      if (this.$refs.form.validate()) {
         // Достаем данные из формы
         const { email, password } = this.form;
         if (this.registration) {
